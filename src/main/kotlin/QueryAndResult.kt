@@ -185,7 +185,7 @@ class TeleEntryQuery private constructor(
             var fileSize: String? = null
             var unzipPassword: String? = null
             document.selectFirst("blockquote")!!.let {
-                it.select("strong").forEach { strong ->
+                val metaDataParser: (Element) -> Unit = { strong ->
                     val strongText = strong.text()
 
                     val pair = strongText.split(": ")
@@ -208,6 +208,9 @@ class TeleEntryQuery private constructor(
                         else -> TeleLog.d(TAG, "解析-找到未知元数据：${pair[0]}")
                     }
                 }
+
+                it.select("strong").forEach(metaDataParser)
+                it.select("s-").forEach(metaDataParser) // 为了新发现的错版，如office-girl
             }
 
             // 下载链接

@@ -243,7 +243,7 @@ class TeleTest {
 
     @Test
     fun test07() = runBlocking {
-        TeleLog.i(TAG, "请求特定实体：jk-7（测试错版兼容性）")
+        TeleLog.i(TAG, "请求特定实体：jk-7")
 
         val result = teleFetcher.fetch(TeleEntryQuery.build(entryId = TeleEntryRes("jk-7")))
 
@@ -252,6 +252,15 @@ class TeleTest {
 
     @Test
     fun test08() = runBlocking {
+        TeleLog.i(TAG, "请求特定实体：office-girl")
+
+        val result = teleFetcher.fetch(TeleEntryQuery.build(entryId = TeleEntryRes("office-girl")))
+
+        result.checkEntry()
+    }
+
+    @Test
+    fun test09() = runBlocking {
         TeleLog.i(TAG, "请求特定实体：mai-shiranui-7")
 
         val result = teleFetcher.fetch(TeleEntryQuery.build(entryId = TeleEntryRes("mai-shiranui-7")))
@@ -260,7 +269,7 @@ class TeleTest {
     }
 
     @Test
-    fun test09() = runBlocking {
+    fun test10() = runBlocking {
         TeleLog.i(TAG, "测试视频解析")
 
         val result =
@@ -279,10 +288,11 @@ class TeleTest {
     }
 
     @Test
-    fun test10() = runBlocking {
+    fun test11() = runBlocking {
         TeleLog.i(TAG, "请求404列表：关键词：度尽劫波兄弟在")
         assert(teleFetcher.fetch(TeleListQuery.build(keyword = TeleKeywordRes(TeleKeywordRes.Keyword("度尽劫波兄弟在")))) is TeleResult.Failure)
         TeleLog.i(TAG, "成功得到失败的结果")
+        // TODO：应该变为返回空列表
     }
 
     fun TeleResult<TeleList>.checkList() = when (this) {
