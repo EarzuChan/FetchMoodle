@@ -1,49 +1,53 @@
-package lib.fetchtele
+package lib.fetchmoodle
 
 import io.ktor.client.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.isSuccess
-import org.jsoup.Jsoup
 
-// TODO：其实应该允许直接传入一个 Http客户端
-class TeleFetcherConfig(
-    val ktorHttpClient: HttpClient,
-    val teleLogger: ((TeleLog.LogLine) -> Unit)? = null
+class MoodleFetcherConfig(
+    val baseUrl: String
 )
 
-class TeleFetcher(teleFetcherConfig: TeleFetcherConfig) {
-    private val httpClient = teleFetcherConfig.ktorHttpClient
-
-    init {
-        teleFetcherConfig.teleLogger?.let { TeleLog.setLogger(it) }
+class MoodleContext(
+    val httpClient: HttpClient,
+    val baseUrl: String,
+    var sesskey: String? = null,
+    var moodleSession: String? = null
+) {
+    private companion object {
+        const val TAG = "MoodleFetcher"
     }
 
-    suspend fun <RESULT_TYPE> fetch(query: TeleQuery<RESULT_TYPE>): TeleResult<RESULT_TYPE> {
-        return try {
-            val url = query.url
-            val response = httpClient.get(url) { query.configureRequest(this) }
+    val isLoggedIn: Boolean; get() = !moodleSession.isNullOrEmpty() && !sesskey.isNullOrEmpty() // 缺一不可
 
-            if (response.status.isSuccess()) {
-                try {
-                    // TODO：以后没准引入让query自行处理返回的机制
-                    val bodyText = response.bodyAsText()
-                    val document = Jsoup.parse(bodyText)
-
-                    val result = query.parseDocument(document)
-
-                    TeleResult.Success(result)
-                } catch (e: Exception) {
-                    TeleResult.Failure(TeleException("Failed to parse response: ${e.stackTraceToString()}"))
-                }
-            } else TeleResult.Failure(TeleException("HttpClient failed to fetch (${response.status.value}): $url"))
-        } catch (e: Exception) {
-            TeleResult.Failure(TeleException("Failed to fetch: ${e.stackTraceToString()}"))
+    fun HttpRequestBuilder.injectMoodleSession() {
+        moodleSession?.let {
+            cookie("MoodleSession", it)
+            MoodleLog.d(TAG, "已注入Moodle会话")
         }
-    }
-
-    companion object {
     }
 }
 
-class TeleException(message: String) : Exception("FetchTele > Error: $message")
+class MoodleFetcher(moodleFetcherConfig: MoodleFetcherConfig) {
+    private val moodleContext = MoodleContext(HttpClient(CIO), moodleFetcherConfig.baseUrl)
+
+    fun loginBySessionData(sesskey: String, moodleSession: String) {
+        moodleContext.sesskey = sesskey
+        moodleContext.moodleSession = moodleSession
+    }
+
+    // TIPS：通用方法
+    suspend fun <RESULT_TYPE> execute(operation: MoodleOperation<RESULT_TYPE>): MoodleResult<RESULT_TYPE> = with(operation) {
+        moodleContext.execute()
+    }
+
+    suspend fun login(username: String, password: String): MoodleResult<Unit> = execute(LoginOperation(username, password))
+
+    suspend fun getGrades() = execute(GradesQuery())
+
+    companion object {
+        private const val TAG = "MoodleFetcher"
+    }
+}
+
+class MoodleException(message: String, cause: Throwable? = null) : Exception("MoodleException # $message", cause)

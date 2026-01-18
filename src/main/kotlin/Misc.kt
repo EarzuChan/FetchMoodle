@@ -1,14 +1,9 @@
-﻿package lib.fetchtele
+﻿package lib.fetchmoodle
 
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.Base64
-import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
-import kotlin.text.Charsets
 
-object TeleLog {
+object MoodleLog {
     enum class Level(val value: String) { DEBUG("D"), INFO("I"), WARN("W"), ERROR("E") }
 
     /**
@@ -103,52 +98,6 @@ object TeleLog {
     }
 }
 
-object TeleUtils {
-    private const val TAG = "TeleUtils"
-
-    /**
-     * 使用 AES/CBC/PKCS5Padding 解密经过特定格式编码的链接或数据。
-     *
-     * @param base64CiphertextWithIv Base64 编码的字符串，前 16 字节是 IV，后面是密文。
-     * @param keyString 用于解密的 UTF-8 密钥字符串。其字节长度必须是 16, 24 或 32。
-     * @return 解密后的 UTF-8 字符串，如果解密失败则返回 null。
-     */
-    fun decryptCossoraLink(base64CiphertextWithIv: String, keyString: String): String {
-        return try {
-            // 1. Base64 解码
-            val decodedBytes = Base64.getDecoder().decode(base64CiphertextWithIv)
-
-            // 检查解码后的数据长度是否足够包含 IV (16 字节)
-            if (decodedBytes.size < 16) throw IllegalArgumentException("Invalid Base64 data: shorter than 16 bytes")
-
-            // 2. 分离 IV 和密文
-            // IV 是前 16 个字节
-            val ivBytes = decodedBytes.copyOfRange(0, 16)
-            // 密文是 IV 之后的部分
-            val ciphertextBytes = decodedBytes.copyOfRange(16, decodedBytes.size)
-
-            // 3. 准备密钥
-            // 将密钥字符串转换为 UTF-8 字节数组
-            val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-            // 创建 AES 密钥规范。注意：未检查 keyBytes 的长度是否为 16, 24, 32
-            val secretKeySpec = SecretKeySpec(keyBytes, "AES")
-
-            // 4. 准备 IV 参数规范
-            val ivParameterSpec = IvParameterSpec(ivBytes)
-
-            // 5. 获取并初始化 Cipher 实例
-            // 使用 "AES/CBC/PKCS5Padding" (与 CryptoJS 的 Pkcs7 在 AES 上等效)
-            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec)
-
-            // 6. 执行解密
-            val decryptedBytes = cipher.doFinal(ciphertextBytes)
-
-            // 7. 将解密后的字节数组转换回 UTF-8 字符串
-            String(decryptedBytes, Charsets.UTF_8)
-
-        } catch (e: Exception) {
-            throw RuntimeException("Decryption failed: ${e.message}", e)
-        }
-    }
+object MoodleUtils {
+    private const val TAG = "MoodleUtils"
 }

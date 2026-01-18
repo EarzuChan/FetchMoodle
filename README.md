@@ -1,6 +1,6 @@
-﻿# FetchTele
+﻿# FetchMoodle
 
-FetchTele: Kotlin library, fetch resources from [CosplayTele](https://CosplayTele.com).
+FetchMoodle: Kotlin library, fetch resources from your Moodle site.
 
 ## Usage
 

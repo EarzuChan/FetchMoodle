@@ -1,16 +1,16 @@
 plugins {
-    kotlin("jvm") version "2.2.20" // 检查更新：https://kotlinlang.org/
-    id("com.gradleup.shadow") version "9.1.0" // 检查更新：https://plugins.gradle.org/plugin/com.gradleup.shadow
+    kotlin("jvm") version "2.3.0" // 检查更新：https://kotlinlang.org/
+    id("com.gradleup.shadow") version "9.3.1" // 检查更新：https://plugins.gradle.org/plugin/com.gradleup.shadow
 }
 
-group = "lib.fetchtele"
+group = "lib.fetchmoodle"
 
 // 年份/月份/修订
-version = "2025.9.1"
+version = "2026.1.1"
 
 // 记得跟进最新版本
-val ktorVersion = "3.3.0" // 检查更新：https://ktor.io/
-val jsoupVersion = "1.21.2" // 检查更新：https://jsoup.org/
+val ktorVersion = "3.3.3" // 检查更新：https://ktor.io/
+val jsoupVersion = "1.22.1" // 检查更新：https://jsoup.org/
 
 repositories {
     mavenCentral()
@@ -19,10 +19,10 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
 
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
 tasks {
