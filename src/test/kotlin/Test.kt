@@ -15,11 +15,11 @@ class MoodleTest {
         private const val TAG = "MoodleTest"
     }
 
-    val moodleFetcher = MoodleFetcher(MoodleFetcherConfig(baseUrl = "https://school.moodledemo.net"))
+    val moodleFetcher = MoodleFetcher()
 
     @Test
     fun test01_login() = runBlocking {
-        when (val res = moodleFetcher.login("student", "moodle25")) {
+        when (val res = moodleFetcher.login("https://school.moodledemo.net", "student", "moodle25")) {
             is MoodleResult.Success -> MoodleLog.i(TAG, "登录成功")
 
             is MoodleResult.Failure -> MoodleLog.e(TAG, "登录失败：${res.exception.stackTraceToString()}")

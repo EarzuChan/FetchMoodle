@@ -41,7 +41,7 @@ abstract class MoodleQuery<RESULT_TYPE> : MoodleOperation<RESULT_TYPE> {
     }.fold({ MoodleResult.Success(it) }, { MoodleResult.Failure(MoodleException("请求执行失败：${it.message}", it)) })
 }
 
-class LoginOperation(private val username: String, private val password: String) : MoodleOperation<Unit> {
+class LoginOperation(private val baseUrl: String, private val username: String, private val password: String) : MoodleOperation<Unit> {
     private companion object {
         const val TAG = "LoginOperation"
 
@@ -64,6 +64,8 @@ class LoginOperation(private val username: String, private val password: String)
 
     override suspend fun MoodleContext.execute(): MoodleResult<Unit> {
         return try {
+            baseUrl = this@LoginOperation.baseUrl
+
             val loginUrl = "$baseUrl/login/index.php"
 
             // 获取登录Token
@@ -93,8 +95,7 @@ class LoginOperation(private val username: String, private val password: String)
             MoodleResult.Success(Unit)
         } catch (e: Exception) {
             // 清理会话数据
-            sesskey = null
-            moodleSession = null
+            cleanSessionData()
 
             MoodleResult.Failure(MoodleException("登录时出错：${e.stackTraceToString()}"))
         }

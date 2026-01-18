@@ -4,13 +4,11 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 
-class MoodleFetcherConfig(
-    val baseUrl: String
-)
+class MoodleFetcherConfig()
 
 class MoodleContext(
     val httpClient: HttpClient,
-    var baseUrl: String,
+    var baseUrl: String? = null,
     var sesskey: String? = null,
     var moodleSession: String? = null
 ) {
@@ -18,7 +16,7 @@ class MoodleContext(
         const val TAG = "MoodleFetcher"
     }
 
-    val isLoggedIn: Boolean; get() = !moodleSession.isNullOrEmpty() && !sesskey.isNullOrEmpty() // 缺一不可
+    val isSessionDataSet: Boolean; get() = !baseUrl.isNullOrEmpty() && !moodleSession.isNullOrEmpty() && !sesskey.isNullOrEmpty() // 缺一不可
 
     fun HttpRequestBuilder.injectMoodleSession() {
         moodleSession?.let {
@@ -26,28 +24,33 @@ class MoodleContext(
             MoodleLog.d(TAG, "已注入Moodle会话")
         }
     }
+
+    fun cleanSessionData() {
+        baseUrl = null
+        sesskey = null
+        moodleSession = null
+    }
 }
 
-class MoodleFetcher(moodleFetcherConfig: MoodleFetcherConfig) {
-    private val moodleContext = MoodleContext(HttpClient(CIO), moodleFetcherConfig.baseUrl)
+class MoodleFetcher(moodleFetcherConfig: MoodleFetcherConfig = MoodleFetcherConfig()) {
+    private val moodleContext = MoodleContext(HttpClient(CIO))
 
     // 使用已有的会话数据登录
-    fun loginBySessionData(sesskey: String, moodleSession: String) {
+    fun setSessionData(baseUrl: String, sesskey: String, moodleSession: String) {
+        moodleContext.baseUrl = baseUrl
         moodleContext.sesskey = sesskey
         moodleContext.moodleSession = moodleSession
     }
 
-    // 覆写基础URL
-    fun setBaseUrl(baseUrl: String) {
-        moodleContext.baseUrl = baseUrl
-    }
+    // 相当于客户端侧登出
+    fun clearSessionData() = moodleContext.cleanSessionData()
 
     // TIPS：通用方法
     suspend fun <RESULT_TYPE> execute(operation: MoodleOperation<RESULT_TYPE>): MoodleResult<RESULT_TYPE> = with(operation) {
         moodleContext.execute()
     }
 
-    suspend fun login(username: String, password: String): MoodleResult<Unit> = execute(LoginOperation(username, password))
+    suspend fun login(baseUrl: String, username: String, password: String): MoodleResult<Unit> = execute(LoginOperation(baseUrl, username, password))
 
     suspend fun getGrades() = execute(GradesQuery())
 
